@@ -11,12 +11,17 @@
 set -e
 
 SDK_FETCH_URL="https://api.github.com/repos/theos/sdks/releases/latest"
+CMD_POSTFIX="| grep download_url | sed 's/.*: "\(.*\)"/\1/'"
 if ! [[ -z "$GITHUB_TOKEN" ]]; then
-	urls=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" $SDK_FETCH_URL | grep download_url | sed 's/.*: "\(.*\)"/\1/')
+	cmd="curl -s -H "Authorization: Bearer $SDK_FETCH_URL"
 else
-	urls=$(curl -s $SDK_FETCH_URL | grep download_url | sed 's/.*: "\(.*\)"/\1/')
+        cmd="curl -s $SDK_FETCH_URL"
 fi
+urls=$($cmd $CMD_POSTFIX)
 if [[ -z "$urls" ]]; then
+        echo "Failed to execute: $cmd"
+        echo "Trying to execute without postfix..."
+        $cmd
 	echo "ERROR: api.github.com request failed?!" >&2
 	exit 1
 fi
